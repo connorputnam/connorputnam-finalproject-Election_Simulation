@@ -1,0 +1,62 @@
+---
+title: "Lets simulate an election!"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(scales)
+```
+
+Start by reading in the senate polling data. I have this as a .cvs so it will need to manually updated from time to time. 
+
+```{r}
+polls <- read.csv("senate_polls.csv")
+```
+
+```{r}
+polls <- polls %>%
+  filter(state == "Georgia") %>%
+  filter(race_id == "7780") %>%
+  group_by(candidate_name)
+polls
+```
+
+```{r}
+EDA_polls <- polls %>% 
+  group_by(candidate_name, candidate_party) %>%
+  summarise(average_polling = mean(pct)) %>%
+  filter(candidate_name == "Raphael Warnock" | candidate_name == "Kelly Loeffler" | candidate_name == "Doug Collins" |
+         candidate_name == "Matthew Lieberman" | candidate_name == "Ed Tarver" | candidate_name == "Brian Richard Slowinski")
+
+ggplot(EDA_polls, aes(reorder(candidate_name, average_polling), average_polling, fill = candidate_party, label = round(average_polling, 2))) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values=c("#26b3f2", "#fcd407", "#ec1e26")) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  ylab("Polling Average(percent)") +
+  xlab("Candidate") +
+  geom_text(position = position_dodge(width = .9),    # move to center of bars
+              vjust = -.5,    # nudge above top of bar
+              size = 3) +
+  ylim(0, 25)
+```
+
+
+```{r}
+EDA_polls_rating <- polls %>% 
+  group_by(fte_grade) %>%
+  count(fte_grade) %>%
+  mutate(fte_grade = fct_recode(fte_grade, "No Rating" = ""))
+
+#fct_recode 
+
+ggplot(EDA_polls_rating, aes(fte_grade, n, fill = fte_grade)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  ylab("Number of Polls Conducted") +
+  xlab("Rating") +
+  ggtitle("Counts per Pollster Rating") +
+  labs(fill = "Ratings")
+```
+

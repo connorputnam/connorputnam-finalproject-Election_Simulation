@@ -1,0 +1,44 @@
+---
+title: "TODO"
+output: 
+  md_document:
+    variant: markdown_github
+---
+
+
+## Week 5
+
+* Gather data
+** Going to gather most polling data via 538, because they have ranked pollsters. So I can make a judgment on what polls to include in my model
+
+* Begin reading in some of the polls and getting summary statistics
+** Overall EDA
+
+## Week 6
+
+* The election on nov 3rd will be important. It will determine which to candidate move onto the general election. So I might have to push some work off till then. But for the most part this should not be a problem
+
+* Begin building a forecast model
+
+## Week 7
+
+* Finish Building model in the beginning of the week
+
+* Start simulating
+** So figure out what type of distribution will be necessary. I am currently thinking normal, but from my knowledge of elections I think these will need to be adjusted to something with fatter tails, because of partisanship
+
+## Week 8
+
+* Continue work/finish simulation
+
+* Simulation should have metrics for things like average vote spread and standard deviation. Average vote percentages for each candidate And the probability of winning the race. 
+
+* If I have time I would also like to make a map of the state by county and that will show the final results which wont be known till January.
+
+## Week 9
+
+Documentation and deliverables
+
+## Week 10
+
+Documentation and deliverables
