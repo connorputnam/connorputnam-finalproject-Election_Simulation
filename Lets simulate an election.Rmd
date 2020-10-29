@@ -59,4 +59,4 @@ ggplot(EDA_polls_rating, aes(fte_grade, n, fill = fte_grade)) +
   ggtitle("Counts per Pollster Rating") +
   labs(fill = "Ratings")
 ```
-
+ 
