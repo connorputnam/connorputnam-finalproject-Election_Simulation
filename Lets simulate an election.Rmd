@@ -65,10 +65,12 @@ Now that the off happened...going to build the model based off of Perdue vs Osso
 
 ```{r}
 Perdue_vs_Ossoff <- polls %>% 
-  group_by(candidate_name, candidate_party) %>%
-  summarise(average_polling = mean(pct)) %>%
+  group_by(candidate_name, candidate_party, cycle) %>%
+  mutate(standard_deviation = sd(pct)) %>%
+  summarise(average_polling = mean(pct), standard_deviation = mean(standard_deviation)) %>%
   filter(candidate_name == "David A. Perdue" | candidate_name == "Jon Ossoff")
 Perdue_vs_Ossoff
+
 
 ggplot(Perdue_vs_Ossoff, aes(reorder(candidate_name, average_polling), average_polling, fill = candidate_party, label = round(average_polling, 2))) +
   geom_bar(stat = "identity") +
@@ -96,17 +98,44 @@ average_historical <- function(select_year){
   filter(year == select_year) %>%
   filter(office == "Senate") %>%
   group_by(candidate, year, party) %>%
-  summarise(average_polling = mean(projected_voteshare), actutal_voteshare = mean(actual_voteshare))
+  summarise(average_polling = mean(projected_voteshare), actutal_voteshare = mean(actual_voteshare),
+            standard_deviation = mean(sd(projected_voteshare))) 
+            #standard_deviation_actual = mean(sd(actual_voteshare)))
 }
 
-#Isakson vs Barksdale
+#Isakson vs Barksdale and Perdue vs Nunn
 summary_table <- bind_rows(average_historical("2016"), average_historical("2014"))
 
-formattable(summary_table,
-            align = c("l", rep("r", rep(NCOL(summary_table)))),
-            list(`"Summary Statistics"` = formatter("span",
-                              style = ~style(color = "gray"))))
-            
+#formattable(summary_table,
+        #    align = c("l", rep("r", rep(NCOL(summary_table)))),
+        #    list(`"Summary Statistics"` = formatter("span",
+            #                  style = ~style(color = "gray"))))
 ```
 
+Now taking the historical data and the current data together
+```{r}
+Perdue_vs_Ossoff
+summary_table <- summary_table %>%
+  rename("candidate_party" = party) %>%
+  rename("cycle" = year) %>%
+  rename("candidate_name" = candidate)
+```
+
+```{r}
+total_data <- bind_rows(Perdue_vs_Ossoff, summary_table) %>%
+  mutate(candidate_party = recode(candidate_party, 
+                                  `REP` = "R", 
+                                  `DEM` = "D")) %>%
+  filter(candidate_party == "R" | candidate_party == "D") %>% #2020 election will not have independents, only top two advance
+  group_by(cycle) %>%
+  arrange(cycle, candidate_party) %>%
+  mutate(spread = average_polling - lag(average_polling)) %>%
+  fill(spread, .direction = "up")
+  #pivot_longer(cols = c(candidate_name, average_polling, standard_deviation), names_to = "variables", values_to = "times")
+total_data
+```
+
+```{r}
+
+```
 
