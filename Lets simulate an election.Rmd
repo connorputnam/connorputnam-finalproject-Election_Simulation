@@ -8,6 +8,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(scales)
 library(formattable)
+library(SuppDists)
+library(reshape2)
 ```
 
 Start by reading in the senate polling data. I have this as a .cvs so it will need to manually updated from time to time. 
@@ -138,19 +140,25 @@ total_data
 ```
 
 ```{r}
-nsim <- 1000
-
-empty_vec <- rep(0, nsim)
-
 parmamter_data <- polls %>% 
   group_by(candidate_name) %>%
   select(candidate_name, pct) %>%
   filter(candidate_name == "David A. Perdue" | candidate_name == "Jon Ossoff")
-paramters <- SuppDists::JohnsonFit(parmamter_data$pct)
+paramters <- JohnsonFit(parmamter_data$pct)
 
-distribution <- SuppDists::rJohnsonSB(n = 500, parms = list(gamma = -0.5, delta = 2, xi = -0.5, lambda = 2))
-distribution
+johnson_dist <- rJohnson(n = 50000, 
+                         parms = list(gamma = 0, 
+                                      delta = .5, 
+                                      xi = 0, #no really sure what this parameter is doing...
+                                      lambda = 2, 
+                                      type = "SN"))
 
-qplot(distribution, geom = "density")
+normal_dist <- rnorm(n = 50000, mean = 0, sd = 1)
+
+overlay <- melt(as.data.frame(cbind(johnson_dist, normal_dist)))
+
+ggplot(overlay, aes(value, fill = variable)) +
+  geom_density(alpha = 0.5)
+#fat tails!
 ```
 
