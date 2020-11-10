@@ -130,12 +130,27 @@ total_data <- bind_rows(Perdue_vs_Ossoff, summary_table) %>%
   group_by(cycle) %>%
   arrange(cycle, candidate_party) %>%
   mutate(spread = average_polling - lag(average_polling)) %>%
-  fill(spread, .direction = "up")
+  fill(spread, .direction = "up") %>%
+  mutate(spread = case_when(candidate_party == "R" ~ spread,
+                            candidate_party == "D" ~ (-1 * spread))) #creating the spread for both candidates based on party. THis took be a longggg time to figure out
   #pivot_longer(cols = c(candidate_name, average_polling, standard_deviation), names_to = "variables", values_to = "times")
 total_data
 ```
 
 ```{r}
+nsim <- 1000
 
+empty_vec <- rep(0, nsim)
+
+parmamter_data <- polls %>% 
+  group_by(candidate_name) %>%
+  select(candidate_name, pct) %>%
+  filter(candidate_name == "David A. Perdue" | candidate_name == "Jon Ossoff")
+paramters <- SuppDists::JohnsonFit(parmamter_data$pct)
+
+distribution <- SuppDists::rJohnsonSB(n = 500, parms = list(gamma = -0.5, delta = 2, xi = -0.5, lambda = 2))
+distribution
+
+qplot(distribution, geom = "density")
 ```
 
