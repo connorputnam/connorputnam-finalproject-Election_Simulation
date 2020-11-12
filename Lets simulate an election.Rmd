@@ -140,20 +140,21 @@ total_data
 ```
 
 ```{r}
+n <- 100000000
 parmamter_data <- polls %>% 
   group_by(candidate_name) %>%
   select(candidate_name, pct) %>%
   filter(candidate_name == "David A. Perdue" | candidate_name == "Jon Ossoff")
 paramters <- JohnsonFit(parmamter_data$pct)
 
-johnson_dist <- rJohnson(n = 50000, 
+johnson_dist <- rJohnson(n = n, 
                          parms = list(gamma = 0, 
                                       delta = .5, 
                                       xi = 0, #no really sure what this parameter is doing...
                                       lambda = 2, 
                                       type = "SN"))
 
-normal_dist <- rnorm(n = 50000, mean = 0, sd = 1)
+normal_dist <- rnorm(n = n, mean = 0, sd = 1)
 
 overlay <- melt(as.data.frame(cbind(johnson_dist, normal_dist)))
 
@@ -162,3 +163,20 @@ ggplot(overlay, aes(value, fill = variable)) +
 #fat tails!
 ```
 
+```{r}
+## Set up for computing the distributions of spreads in regards to jon ossoff
+
+empty_vec <- rep((total_data %>% filter(candidate_name == "Jon Ossoff"))$spread , n)
+
+ossof_probs <- (sd(johnson_dist) * johnson_dist) + empty_vec
+
+ggplot(data.frame(ossof_probs), aes(x = ossof_probs)) +
+  geom_density() +
+  geom_vline(xintercept = mean(ossof_probs))
+
+length(which(ossof_probs > 0))
+length(which(ossof_probs < 0))
+length(which(ossof_probs == 0))
+```
+
+- meaning democrate closes by that much, and positive means wins by that much
