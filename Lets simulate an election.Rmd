@@ -26,6 +26,8 @@ polls <- polls %>%
 polls
 ```
 
+# EDA
+
 ```{r}
 EDA_polls <- polls %>% 
   group_by(candidate_name, candidate_party) %>%
@@ -114,7 +116,7 @@ summary_table <- bind_rows(average_historical("2016"), average_historical("2014"
             #                  style = ~style(color = "gray"))))
 ```
 
-Now taking the historical data and the current data together
+# Historical Data
 ```{r}
 Perdue_vs_Ossoff
 summary_table <- summary_table %>%
@@ -139,8 +141,10 @@ total_data <- bind_rows(Perdue_vs_Ossoff, summary_table) %>%
 total_data
 ```
 
+# Johnson vs Normal
+
 ```{r}
-n <- 100000000
+n <- 100000
 parmamter_data <- polls %>% 
   group_by(candidate_name) %>%
   select(candidate_name, pct) %>%
@@ -166,17 +170,66 @@ ggplot(overlay, aes(value, fill = variable)) +
 ```{r}
 ## Set up for computing the distributions of spreads in regards to jon ossoff
 
-empty_vec <- rep((total_data %>% filter(candidate_name == "Jon Ossoff"))$spread , n)
-
+empty_vec <- rep((total_data %>% filter(cycle == "2020") %>% filter(candidate_name == "David A. Perdue"))$spread , 100)
+#perdue is in two races....casuing headaches here
 ossof_probs <- (sd(johnson_dist) * johnson_dist) + empty_vec
 
 ggplot(data.frame(ossof_probs), aes(x = ossof_probs)) +
   geom_density() +
   geom_vline(xintercept = mean(ossof_probs))
 
-length(which(ossof_probs > 0))
-length(which(ossof_probs < 0))
-length(which(ossof_probs == 0))
+win <- length(which(ossof_probs > 0)) / n #prob  winning
+lose <- length(which(ossof_probs < 0)) / n #prob  losing
+
+cbind(win, lose)
 ```
 
 - meaning democrate closes by that much, and positive means wins by that much
+
+
+
+
+# Bootstrapping
+
+```{r}
+boot_polls <- polls %>% 
+  group_by(candidate_name, candidate_party, cycle) %>%
+  #mutate(standard_deviation = sd(pct)) %>%
+  #mutate(average_polling = mean(pct), standard_deviation = mean(standard_deviation)) %>%
+  filter(candidate_name == "David A. Perdue" | candidate_name == "Jon Ossoff")
+
+boot_data <- boot_polls %>%
+  mutate(candidate_party = recode(candidate_party, 
+                                  `REP` = "R", 
+                                  `DEM` = "D")) %>%
+  filter(candidate_party == "R" | candidate_party == "D") %>% #2020 election will not have independents, only top two advance
+  group_by(question_id) %>%
+  #arrange(question_id, candidate_party) %>%
+  select(question_id, poll_id, fte_grade, sample_size, candidate_name, candidate_party, pct) %>%
+  filter(question_id != 123442 & question_id != 123443) %>%
+  mutate(spread = pct - pct[candidate_party == "D"]) %>%
+  mutate(spread2 = pct - pct[candidate_party == "R"]) %>%
+  mutate(actual_spread = spread + spread2) %>%
+  select(-spread, -spread2)
+boot_data
+```
+
+```{r}
+ggplot(boot_data, aes(actual_spread)) +
+  geom_histogram(bins = 15)
+```
+
+```{r}
+boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_data), replace = TRUE)) %>%
+  map_dbl(mean)
+
+boot_spread <- melt(boot_spread)
+ggplot(boot_spread, aes(value)) +
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun = dnorm, args = c(mean = mean(boot_spread$value), sd = sd(boot_spread$value))) +
+  geom_vline(xintercept = mean(boot_spread$value))
+```
+
+
+
+
