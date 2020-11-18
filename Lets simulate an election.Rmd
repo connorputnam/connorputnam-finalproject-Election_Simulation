@@ -167,7 +167,6 @@ ggplot(overlay, aes(value, fill = variable)) +
 #fat tails!
 ```
 
-```{r}
 ## Set up for computing the distributions of spreads in regards to jon ossoff
 
 empty_vec <- rep((total_data %>% filter(cycle == "2020") %>% filter(candidate_name == "David A. Perdue"))$spread , 100)
@@ -182,7 +181,6 @@ win <- length(which(ossof_probs > 0)) / n #prob  winning
 lose <- length(which(ossof_probs < 0)) / n #prob  losing
 
 cbind(win, lose)
-```
 
 - meaning democrate closes by that much, and positive means wins by that much
 
@@ -230,6 +228,36 @@ ggplot(boot_spread, aes(value)) +
   geom_vline(xintercept = mean(boot_spread$value))
 ```
 
+```{r}
+fit <- MASS:: fitdistr(boot_data$actual_spread, "normal")
+```
+
+
+```{r}
+## Set up for computing the distributions of spreads in regards to jon ossoff
+
+reps <- 1000
+
+empty_vec <- rep((boot_data %>%
+                    group_by(candidate_name) %>%
+                    summarise(average_spread = mean(actual_spread)) %>%
+                    filter(candidate_name == "David A. Perdue") %>%
+                    select(average_spread)), reps) %>%
+                    flatten_dbl()
+
+perdue_probs <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]), as.numeric(fit$estimate[2]))) + empty_vec
+
+#ossof_probs <- (sd(johnson_dist) * johnson_dist) + empty_vec
+
+ggplot(data.frame(perdue_probs), aes(x = perdue_probs)) +
+  geom_density() +
+  geom_vline(xintercept = mean(perdue_probs))
+
+win <- length(which(perdue_probs > 0)) / n #prob  winning
+lose <- length(which(perdue_probs < 0)) / n #prob  losing
+
+cbind(win, lose)
+```
 
 
 
