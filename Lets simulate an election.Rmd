@@ -225,18 +225,20 @@ boot_spread <- melt(boot_spread)
 ggplot(boot_spread, aes(value)) +
   geom_histogram(aes(y=..density..)) +
   stat_function(fun = dnorm, args = c(mean = mean(boot_spread$value), sd = sd(boot_spread$value))) +
-  geom_vline(xintercept = mean(boot_spread$value))
+  geom_vline(xintercept = mean(boot_spread$value)) +
+  labs(title = "Bootstrapped Spreads")
 ```
 
 ```{r}
-fit <- MASS:: fitdistr(boot_data$actual_spread, "normal")
+fit <- MASS:: fitdistr(boot_spread$value, "normal")
+fit
 ```
 
 
 ```{r}
 ## Set up for computing the distributions of spreads in regards to jon ossoff
 
-reps <- 1000
+reps <- 10000
 
 empty_vec <- rep((boot_data %>%
                     group_by(candidate_name) %>%
@@ -245,7 +247,10 @@ empty_vec <- rep((boot_data %>%
                     select(average_spread)), reps) %>%
                     flatten_dbl()
 
-perdue_probs <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]), as.numeric(fit$estimate[2]))) + empty_vec
+#This is where the actual predictions are now taking place
+
+perdue_probs <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]), 
+                                                     as.numeric(fit$estimate[2]))) + empty_vec 
 
 #ossof_probs <- (sd(johnson_dist) * johnson_dist) + empty_vec
 
