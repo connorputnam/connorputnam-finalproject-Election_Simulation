@@ -264,5 +264,67 @@ lose <- length(which(perdue_probs < 0)) / n #prob  losing
 cbind(win, lose)
 ```
 
+```{r}
 
+```
+
+```{r}
+# in terms of ossof
+empty_vec_ossof <- rep((boot_data %>%
+                    group_by(candidate_name) %>%
+                    summarise(average_spread = mean(actual_spread)) %>%
+                    filter(candidate_name == "Jon Ossoff") %>%
+                    select(average_spread)), reps) %>%
+                    flatten_dbl()
+
+#This is where the actual predictions are now taking place
+
+ossof_probs <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]), 
+                                                     as.numeric(fit$estimate[2]))) + empty_vec_ossof 
+
+#ossof_probs <- (sd(johnson_dist) * johnson_dist) + empty_vec
+
+ggplot(data.frame(ossof_probs), aes(x = ossof_probs)) +
+  geom_density() +
+  geom_vline(xintercept = mean(ossof_probs))
+
+win_ossof <- length(which(ossof_probs > 0)) / n #prob  winning
+lose_ossof <- length(which(ossof_probs < 0)) / n #prob  losing
+
+cbind(win_ossof, lose_ossof)
+```
+
+
+```{r}
+combined_probs <- melt(as.data.frame(cbind(perdue_probs, ossof_probs)))
+combined_probs <- combined_probs %>% 
+  group_by(variable) %>%
+  mutate_at(vars(variable), as.character) %>%
+  mutate(wining_color = case_when((variable == "perdue_probs" & value > 0) ~ "win",
+                                   (variable == "perdue_probs" & value < 0) ~ "lose",
+                                   (variable == "ossof_probs" & value > 0) ~ "win",
+                                   (variable == "ossof_probs" & value < 0) ~ "lose"))
+  #mutate(color_perdue = ifelse(value > 0, "red", "blue")) %>%
+  #mutate(color_ossof = ifelse(variable 0 & value > 0, "blue", "red"))
+combined_probs
+
+ggplot(combined_probs, aes(value, fill = variable)) +
+  geom_histogram(aes(fill = wining_color)) +
+  scale_x_continuous(breaks = 0) +
+  #geom_vline(xintercept = 0) +
+  facet_wrap(~ variable, ncol = 1)
+```
+
+```{r}
+probability_winning_plot <- function(candidate){
+ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) +
+  geom_histogram(aes(fill = wining_color), color = "black") 
+}
+probability_winning_plot("perdue_probs")
+```
+
+
+```{r}
+combined_probs %>% tail()
+```
 
