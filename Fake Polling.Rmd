@@ -27,7 +27,7 @@ polls
 # Bootstrapping
 
 ```{r}
-fake_polling <- function(distribution, size, max_spread, candidate) {
+fake_polling <- function(distribution, size, min_spread, max_spread, candidate) {
 
 
 fake_polls <- polls %>% 
@@ -54,7 +54,7 @@ fake_polls <- fake_polls %>%
 
 
 
-fake_polls <- as.data.frame(round(distribution(size, min = 0, max = max_spread), 1))
+fake_polls <- as.data.frame(round(distribution(size, min = min_spread, max = max_spread), 1))
 colnames(fake_polls) <- "fake_spread"
 fake_polls <- fake_polls %>%
   slice(rep(1:n(), each = 2)) %>%
@@ -67,7 +67,7 @@ fake_polls <- fake_polls %>%
 preboot_fake_plot <- ggplot(fake_polls, aes(fake_spread)) +
   geom_histogram(bins = 15)
 
-fake_boot_spread <- map(1:10000, ~sample(fake_polls$fake_spread, size = length(fake_polls), replace = TRUE)) %>%
+fake_boot_spread <- map(1:size, ~sample(fake_polls$fake_spread, size = length(fake_polls), replace = TRUE)) %>%
   map_dbl(mean)
 
 fake_boot_spread <- melt(fake_boot_spread)
@@ -80,7 +80,7 @@ boot_fake_plot <- ggplot(fake_boot_spread, aes(value)) +
 
 #fit <- MASS::fitdistr(fake_boot_spread$value, "t")
 
-reps <- 10000
+reps <- size
 
 empty_vec <- rep((fake_polls %>%
                     group_by(candidate_name) %>%
@@ -91,7 +91,7 @@ empty_vec <- rep((fake_polls %>%
 
 fake_boot_spread <- fake_boot_spread %>% flatten_dbl()
 
-Perdue <- (mean(fake_boot_spread) * rnorm(size, mean(fake_boot_spread), 
+Perdue <- (sd(fake_boot_spread) * rnorm(size, mean(fake_boot_spread), 
                                                      sd(fake_boot_spread))) + empty_vec 
 
 win <- length(which(Perdue > 0)) / size #prob  winning
@@ -104,7 +104,7 @@ empty_vec_ossof <- rep((fake_polls %>%
                     select(average_spread)), reps) %>%
                     flatten_dbl()
 
-Ossof <- (mean(fake_boot_spread) * rnorm(size, mean(fake_boot_spread), 
+Ossof <- (sd(fake_boot_spread) * rnorm(size, mean(fake_boot_spread), 
                                                      sd(fake_boot_spread))) + empty_vec_ossof 
 
 win_ossof <- length(which(Ossof > 0)) / size #prob  winning
@@ -125,16 +125,16 @@ combined_probs <- combined_probs %>%
 combined_probs <- combined_probs %>%
   mutate(prob_winning = case_when((variable == "Perdue" & 
                                     wining_color == "win" ~ 
-                                    length(which(Perdue > 0)) / n),
+                                    length(which(Perdue > 0)) / size),
                                   (variable == "Perdue" & 
                                     wining_color == "lose" ~ 
-                                    length(which(Perdue < 0)) / n),
+                                    length(which(Perdue < 0)) / size),
                                   (variable == "Ossof" & 
                                     wining_color == "win" ~ 
-                                    length(which(Ossof > 0)) / n),
+                                    length(which(Ossof > 0)) / size),
                                   (variable == "Ossof" & 
                                     wining_color == "lose" ~ 
-                                    length(which(Ossof < 0)) / n)))
+                                    length(which(Ossof < 0)) / size)))
 
 
 ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) +
@@ -162,7 +162,10 @@ ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) 
 ```
 
 ```{r}
-fake_polling(runif, 10000, 3, "Ossof")
+fake_polling(distribution = runif, size = 100000, min_spread = -1, max_spread = 4, candidate = "Perdue")
+```
+```{r}
+mean(runif(1000, -2, 2))
 ```
 
 
@@ -200,7 +203,7 @@ fake_polls
 
 
 
-fake_polls <- as.data.frame(round(runif(10000, min = 0, max = 8), 1))
+fake_polls <- as.data.frame(round(runif(100000, min = -8, max = 8), 1))
 colnames(fake_polls) <- "fake_spread"
 fake_polls <- fake_polls %>%
   slice(rep(1:n(), each = 2)) %>%
@@ -213,7 +216,7 @@ fake_polls <- fake_polls %>%
 preboot_fake_plot <- ggplot(fake_polls, aes(fake_spread)) +
   geom_histogram(bins = 15)
 
-fake_boot_spread <- map(1:10000, ~sample(fake_polls$fake_spread, size = length(fake_polls), replace = TRUE)) %>%
+fake_boot_spread <- map(1:100000, ~sample(fake_polls$fake_spread, size = length(fake_polls), replace = TRUE)) %>%
   map_dbl(mean)
 
 fake_boot_spread <- melt(fake_boot_spread)
@@ -224,9 +227,9 @@ boot_fake_plot <- ggplot(fake_boot_spread, aes(value)) +
   geom_vline(xintercept = mean(fake_boot_spread$value)) +
   labs(title = "Bootstrapped Spreads")
 
-fit <- MASS::fitdistr(fake_boot_spread$value, "t")
+#fit <- MASS::fitdistr(fake_boot_spread$value, "t")
 
-reps <- 10000
+reps <- 100000
 
 empty_vec <- rep((fake_polls %>%
                     group_by(candidate_name) %>%
@@ -237,8 +240,10 @@ empty_vec <- rep((fake_polls %>%
 
 fake_boot_spread <- fake_boot_spread %>% flatten_dbl()
 
-Perdue <- (mean(fake_boot_spread) * rnorm(100, mean(fake_boot_spread), 
-                                                     sd(fake_boot_spread))) + empty_vec 
+Perdue <- rnorm(100000, mean(fake_boot_spread), 
+                                                     sd(fake_boot_spread)) + empty_vec 
+
+n <- 100000
 
 win <- length(which(Perdue > 0)) / n #prob  winning
 lose <- length(which(Perdue < 0)) / n #prob  losing
@@ -252,6 +257,7 @@ empty_vec_ossof <- rep((fake_polls %>%
 
 Ossof <- (mean(fake_boot_spread) * rnorm(n, mean(fake_boot_spread), 
                                                      sd(fake_boot_spread))) + empty_vec_ossof 
+
 
 win_ossof <- length(which(Ossof > 0)) / n #prob  winning
 lose_ossof <- length(which(Ossof < 0)) / n #prob  losing
@@ -283,23 +289,23 @@ combined_probs <- combined_probs %>%
                                     length(which(Ossof < 0)) / n)))
 
 
-ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) +
+ggplot((combined_probs %>% filter(variable == sprintf("Perdue"))), aes(value)) +
   geom_histogram(aes(fill = wining_color), color = "black", bins = 30) +
   ggthemes::theme_fivethirtyeight() +
   theme(axis.title = element_text()) + xlab("Spread") + ylab("Number of Observations") +
   theme(legend.title = element_blank()) +
   scale_x_continuous(breaks = seq((-1 * ceiling(max(combined_probs$value))) , (ceiling((max(combined_probs$value)))) , by = 1)) +
-  labs(title = sprintf("Probability of Winning vs Losing for %s", candidate)) +
+  labs(title = sprintf("Probability of Winning vs Losing for %s", "Perdue")) +
   annotate(geom = "text", x = mean(combined_probs$value) + (3 * sd(combined_probs$value)), y = 8000, 
            label = sprintf("Winning : %s", 
                            combined_probs %>% 
-                             filter(wining_color == "win" & variable == candidate) %>% 
+                             filter(wining_color == "win" & variable == "Perdue") %>% 
                              summarise(label_percent(accuracy = 0.01)(mean(prob_winning))) %>% 
                              select(-variable) %>% flatten_chr()),
            color = "#00BFC4") +
   annotate(geom = "text", x = mean(combined_probs$value) - (3 * sd(combined_probs$value)), y = 8000, label = sprintf("Losing : %s", 
                            combined_probs %>% 
-                             filter(wining_color == "lose" & variable == candidate) %>% 
+                             filter(wining_color == "lose" & variable == "Perdue") %>% 
                              summarise(label_percent(accuracy = 0.01)(mean(prob_winning))) %>% 
                              select(-variable) %>% flatten_chr()), 
            color = "#F8766D")
