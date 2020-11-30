@@ -1,0 +1,89 @@
+---
+title: "Weight Polling"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+polls <- read.csv("senate_polls.csv")
+```
+
+```{r}
+polls <- polls %>%
+  filter(state == "Georgia") %>%
+  filter(race_id == "7780" | race_id == "6271") %>%
+  group_by(candidate_name)
+polls
+```
+
+# Bootstrapping
+
+```{r}
+boot_data <- polls %>% 
+  group_by(candidate_name, candidate_party, cycle) %>%
+  filter(candidate_name == "David A. Perdue" | candidate_name == "Jon Ossoff")
+
+boot_data <- boot_data %>%
+  mutate(candidate_party = recode(candidate_party, 
+                                  `REP` = "R", 
+                                  `DEM` = "D")) %>%
+  filter(candidate_party == "R" | candidate_party == "D") %>% #2020 election will not have independents, only top two advance
+  group_by(question_id) %>%
+  #arrange(question_id, candidate_party) %>%
+  select(question_id, poll_id, fte_grade, sample_size, candidate_name, candidate_party, pct) %>%
+  filter(question_id != 123442 & question_id != 123443) %>%
+  mutate(spread = pct - pct[candidate_party == "D"]) %>%
+  mutate(spread2 = pct - pct[candidate_party == "R"]) %>%
+  mutate(actual_spread = spread + spread2) %>%
+  select(-spread, -spread2)
+boot_data
+```
+
+```{r}
+ggplot(boot_data, aes(actual_spread)) +
+  geom_histogram(bins = 15)
+```
+
+```{r}
+boot_data <- boot_data %>% group_by(fte_grade) %>%
+                  mutate(Weights = case_when(fte_grade == "A+" ~ .2,
+                             fte_grade == "A" ~ .15,
+                             fte_grade == "A-" ~ .15,
+                             fte_grade == "A/B" ~ .1,
+                             fte_grade == "B+" ~ .1,
+                             fte_grade == "B" ~ .075,
+                             fte_grade == "B/C" ~ .075,
+                             fte_grade == "C+" ~ .05,
+                             fte_grade == "C" ~ .05,
+                             fte_grade == "C/D" ~ .025,
+                             fte_grade == "No Rating" ~ .0125)) %>%
+                  replace(is.na(.), 0.0125) %>%
+                  group_by(Weights)
+
+check <- sample(boot_data$fte_grade, size = 1000, replace = TRUE, prob = boot_data$Weights)
+check <- reshape2::melt(check)
+check <- check %>%
+  count(value)
+
+ggplot(check, aes(value, n)) +
+  geom_bar(stat = "identity")
+
+#looks like a good distribution
+```
+
+
+```{r}
+boot_spread_weights <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_data$actual_spread), replace = TRUE, prob = boot_data$Weights)) %>%
+  map_dbl(mean)
+
+boot_spread_weights <- melt(boot_spread_weights)
+ggplot(boot_spread_weights, aes(value)) +
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun = dnorm, args = c(mean = mean(boot_spread_weights$value), sd = sd(boot_spread_weights$value))) +
+  geom_vline(xintercept = mean(boot_spread_weights$value)) +
+  labs(title = "Bootstrapped Spreads")
+```
