@@ -79,7 +79,7 @@ ggplot(check, aes(value, n)) +
 ```{r}
 boot_spread_weights <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_data$actual_spread), replace = TRUE, prob = boot_data$Weights)) %>%
   map_dbl(mean)
-
+#cccccccc
 boot_spread_weights <- melt(boot_spread_weights)
 ggplot(boot_spread_weights, aes(value)) +
   geom_histogram(aes(y=..density..)) +
