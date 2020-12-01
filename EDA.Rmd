@@ -1,0 +1,142 @@
+---
+title: "EDA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(scales)
+library(formattable)
+library(SuppDists)
+library(reshape2)
+```
+
+Start by reading in the senate polling data. I have this as a .cvs so it will need to manually updated from time to time. 
+
+```{r}
+polls <- read.csv("Data/senate_polls.csv")
+```
+
+```{r}
+polls <- polls %>%
+  filter(state == "Georgia") %>%
+  filter(race_id == "7780" | race_id == "6271") %>%
+  group_by(candidate_name)
+polls
+```
+
+# EDA
+
+```{r}
+EDA_polls <- polls %>% 
+  group_by(candidate_name, candidate_party) %>%
+  summarise(average_polling = mean(pct)) %>%
+  filter(candidate_name == "Raphael Warnock" | candidate_name == "Kelly Loeffler" | candidate_name == "Doug Collins" |
+         candidate_name == "Matthew Lieberman" | candidate_name == "Ed Tarver" | candidate_name == "Brian Richard Slowinski")
+
+ggplot(EDA_polls, aes(reorder(candidate_name, average_polling), average_polling, fill = candidate_party, label = round(average_polling, 2))) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values=c("#26b3f2", "#fcd407", "#ec1e26")) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  ylab("Polling Average(percent)") +
+  xlab("Candidate") +
+  geom_text(position = position_dodge(width = .9),    # move to center of bars
+              vjust = -.5,    # nudge above top of bar
+              size = 3) +
+  ylim(0, 25)
+```
+
+
+```{r}
+EDA_polls_rating <- polls %>% 
+  group_by(fte_grade) %>%
+  count(fte_grade) %>%
+  mutate(fte_grade = fct_recode(fte_grade, "No Rating" = ""))
+
+#fct_recode 
+
+ggplot(EDA_polls_rating, aes(fte_grade, n, fill = fte_grade)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  ylab("Number of Polls Conducted") +
+  xlab("Rating") +
+  ggtitle("Counts per Pollster Rating") +
+  labs(fill = "Ratings")
+```
+ 
+Now that the off happened...going to build the model based off of Perdue vs Ossoff and then make a function that can sub out either race
+
+```{r}
+Perdue_vs_Ossoff <- polls %>% 
+  group_by(candidate_name, candidate_party, cycle) %>%
+  mutate(standard_deviation = sd(pct)) %>%
+  summarise(average_polling = mean(pct), standard_deviation = mean(standard_deviation)) %>%
+  filter(candidate_name == "David A. Perdue" | candidate_name == "Jon Ossoff")
+Perdue_vs_Ossoff
+
+
+ggplot(Perdue_vs_Ossoff, aes(reorder(candidate_name, average_polling), average_polling, fill = candidate_party, label = round(average_polling, 2))) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values=c("#26b3f2", "#ec1e26")) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  ylab("Polling Average(percent)") +
+  xlab("Candidate") +
+  geom_text(position = position_dodge(width = .9),    # move to center of bars
+              vjust = -.5,    # nudge above top of bar
+             size = 3) 
+  ylim(0, 60)
+```
+
+This is where some of my priors/judgement calls come into play. I am going to use data on previous elections, as well as the over partisan lean of Geogria, and some other factor.
+
+```{r}
+#bringing in old data
+
+historical <- read.csv("us_senate_elections.csv")
+historical <- historical %>%
+  filter(state == "GA" |state == "Georgia") # just geogria
+
+average_historical <- function(select_year){
+  historical %>% 
+  filter(year == select_year) %>%
+  filter(office == "Senate") %>%
+  group_by(candidate, year, party) %>%
+  summarise(average_polling = mean(projected_voteshare), actutal_voteshare = mean(actual_voteshare),
+            standard_deviation = mean(sd(projected_voteshare))) 
+            #standard_deviation_actual = mean(sd(actual_voteshare)))
+}
+
+#Isakson vs Barksdale and Perdue vs Nunn
+summary_table <- bind_rows(average_historical("2016"), average_historical("2014"))
+
+#formattable(summary_table,
+        #    align = c("l", rep("r", rep(NCOL(summary_table)))),
+        #    list(`"Summary Statistics"` = formatter("span",
+            #                  style = ~style(color = "gray"))))
+```
+
+# Historical Data
+```{r}
+Perdue_vs_Ossoff
+summary_table <- summary_table %>%
+  rename("candidate_party" = party) %>%
+  rename("cycle" = year) %>%
+  rename("candidate_name" = candidate)
+```
+
+```{r}
+total_data <- bind_rows(Perdue_vs_Ossoff, summary_table) %>%
+  mutate(candidate_party = recode(candidate_party, 
+                                  `REP` = "R", 
+                                  `DEM` = "D")) %>%
+  filter(candidate_party == "R" | candidate_party == "D") %>% #2020 election will not have independents, only top two advance
+  group_by(cycle) %>%
+  arrange(cycle, candidate_party) %>%
+  mutate(spread = average_polling - lag(average_polling)) %>%
+  fill(spread, .direction = "up") %>%
+  mutate(spread = case_when(candidate_party == "R" ~ spread,
+                            candidate_party == "D" ~ (-1 * spread))) #creating the spread for both candidates based on party. THis took be a longggg time to figure out
+  #pivot_longer(cols = c(candidate_name, average_polling, standard_deviation), names_to = "variables", values_to = "times")
+total_data
+```
