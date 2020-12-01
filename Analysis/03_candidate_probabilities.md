@@ -1,16 +1,7 @@
----
-title: "03_candidate_probabilities"
-output: github_document
----
+03\_candidate\_probabilities
+================
 
-```{r include=FALSE}
-library(tidyverse)
-library(reshape2)
-library(scales)
-```
-
-
-```{r}
+``` r
 boot_data <- read.csv(here::here("Data", "bootData.csv"))
 
 boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_data), replace = TRUE)) %>%
@@ -19,12 +10,11 @@ boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_
 boot_spread <- melt(boot_spread)
 ```
 
-```{r}
+``` r
 fit <- MASS:: fitdistr(boot_spread$value, "normal")
 ```
 
-
-```{r}
+``` r
 ## Set up for computing the distributions of spreads in regards to jon ossoff
 
 n <- 100000
@@ -35,14 +25,18 @@ empty_vec <- rep((boot_data %>%
                     filter(candidate_name == "David A. Perdue") %>%
                     select(average_spread)), n) %>%
                     flatten_dbl()
+```
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
 #This is where the actual predictions are now taking place
 
 Perdue <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]), 
                                                      as.numeric(fit$estimate[2]))) + empty_vec 
 ```
 
-```{r}
+``` r
 # in terms of ossof
 empty_vec_ossof <- rep((boot_data %>%
                     group_by(candidate_name) %>%
@@ -50,16 +44,24 @@ empty_vec_ossof <- rep((boot_data %>%
                     filter(candidate_name == "Jon Ossoff") %>%
                     select(average_spread)), n) %>%
                     flatten_dbl()
+```
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
 #This is where the actual predictions are now taking place
 
 Ossof <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]), 
                                                      as.numeric(fit$estimate[2]))) + empty_vec_ossof 
 ```
 
-
-```{r}
+``` r
 combined_probs <- melt(as.data.frame(cbind(Perdue, Ossof)))
+```
+
+    ## No id variables; using all as measure variables
+
+``` r
 combined_probs <- combined_probs %>% 
   group_by(variable) %>%
   mutate_at(vars(variable), as.character) %>%
@@ -84,7 +86,7 @@ combined_probs <- combined_probs %>%
                                     length(which(Ossof < 0)) / n)))
 ```
 
-```{r}
+``` r
 probability_winning_plot <- function(candidate){
 ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) +
   geom_histogram(aes(fill = wining_color), color = "black", bins = 30) +
@@ -110,6 +112,16 @@ ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) 
 probability_winning_plot("Perdue")
 ```
 
-```{r}
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+![](03_candidate_probabilities_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
 probability_winning_plot("Ossof")
 ```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+![](03_candidate_probabilities_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->

@@ -7,7 +7,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(scales)
-library(reshape2)
+library(reshape2) 
 ```
 
 ```{r}
@@ -16,7 +16,6 @@ polls <- polls %>%
   filter(state == "Georgia") %>%
   filter(race_id == "7780" | race_id == "6271") %>%
   group_by(candidate_name)
-polls
 ```
 
 # Creating fake data
