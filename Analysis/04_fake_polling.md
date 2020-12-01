@@ -1,16 +1,7 @@
----
-title: "Fake Data Code"
-output: github_document
----
+Fake Data Code
+================
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(scales)
-library(reshape2)
-```
-
-```{r}
+``` r
 polls <- read.csv(here::here("Data" , "senate_polls.csv"))
 polls <- polls %>%
   filter(state == "Georgia") %>%
@@ -19,9 +10,33 @@ polls <- polls %>%
 polls
 ```
 
+    ## # A tibble: 430 x 38
+    ## # Groups:   candidate_name [25]
+    ##    question_id poll_id cycle state pollster_id pollster sponsor_ids sponsors
+    ##          <int>   <int> <int> <fct>       <int> <fct>    <fct>       <fct>   
+    ##  1      135283   72146  2020 Geor…         320 Monmout… ""          ""      
+    ##  2      135283   72146  2020 Geor…         320 Monmout… ""          ""      
+    ##  3      135283   72146  2020 Geor…         320 Monmout… ""          ""      
+    ##  4      135284   72146  2020 Geor…         320 Monmout… ""          ""      
+    ##  5      135284   72146  2020 Geor…         320 Monmout… ""          ""      
+    ##  6      135285   72146  2020 Geor…         320 Monmout… ""          ""      
+    ##  7      135285   72146  2020 Geor…         320 Monmout… ""          ""      
+    ##  8      135286   72146  2020 Geor…         320 Monmout… ""          ""      
+    ##  9      135286   72146  2020 Geor…         320 Monmout… ""          ""      
+    ## 10      135286   72146  2020 Geor…         320 Monmout… ""          ""      
+    ## # … with 420 more rows, and 30 more variables: display_name <fct>,
+    ## #   pollster_rating_id <int>, pollster_rating_name <fct>, fte_grade <fct>,
+    ## #   sample_size <int>, population <fct>, population_full <fct>,
+    ## #   methodology <fct>, office_type <fct>, seat_number <int>, seat_name <fct>,
+    ## #   start_date <fct>, end_date <fct>, election_date <fct>,
+    ## #   sponsor_candidate <fct>, internal <fct>, partisan <fct>, tracking <lgl>,
+    ## #   nationwide_batch <fct>, ranked_choice_reallocated <fct>, created_at <fct>,
+    ## #   notes <fct>, url <fct>, stage <fct>, race_id <int>, answer <fct>,
+    ## #   candidate_id <int>, candidate_name <fct>, candidate_party <fct>, pct <dbl>
+
 # Creating fake data
 
-```{r}
+``` r
 fake_polling <- function(distribution, size, min_spread, max_spread, candidate) {
 
 fake_polls <- polls %>% 
@@ -140,6 +155,16 @@ ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) 
 }
 ```
 
-```{r}
+``` r
 fake_polling(distribution = runif, size = 100000, min_spread = -4, max_spread = 4, candidate = "Perdue")
 ```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## No id variables; using all as measure variables
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+![](04_fake_polling_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->

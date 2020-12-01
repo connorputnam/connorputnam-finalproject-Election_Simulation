@@ -1,7 +1,13 @@
 ---
 title: "02_Bootstrap"
-output: html_document
+output: github_document
 ---
+
+```{r include=FALSE}
+library(tidyverse)
+library(reshape2)
+```
+
 
 ```{r}
 polls <- read.csv(here::here("Data","senate_polls.csv"))

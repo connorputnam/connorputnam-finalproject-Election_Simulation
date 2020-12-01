@@ -1,7 +1,13 @@
 ---
 title: "Johnson Distribution"
-output: html_document
+output: github_document
 ---
+```{r include=FALSE}
+library(tidyverse)
+library(SuppDists)
+library(reshape2)
+```
+
 
 ```{r}
 polls <- read.csv(here::here("Data","senate_polls.csv"))
@@ -12,7 +18,6 @@ polls <- polls %>%
   filter(state == "Georgia") %>%
   filter(race_id == "7780" | race_id == "6271") %>%
   group_by(candidate_name)
-polls
 ```
 
 # Johnson vs Normal
