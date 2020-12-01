@@ -15,7 +15,7 @@ library(reshape2)
 Start by reading in the senate polling data. I have this as a .cvs so it will need to manually updated from time to time. 
 
 ```{r}
-polls <- read.csv("senate_polls.csv")
+polls <- read.csv(here::here("Data","senate_polls.csv"))
 ```
 
 ```{r}
@@ -93,7 +93,7 @@ This is where some of my priors/judgement calls come into play. I am going to us
 ```{r}
 #bringing in old data
 
-historical <- read.csv("us_senate_elections.csv")
+historical <- read.csv(here::here("Data", "us_senate_elections.csv"))
 historical <- historical %>%
   filter(state == "GA" |state == "Georgia") # just geogria
 
@@ -252,7 +252,6 @@ ggplot(boot_spread, aes(value)) +
 fit <- MASS:: fitdistr(boot_spread$value, "normal")
 #fit <- fitdistrplus::fitdist(boot_spread$value, "unif")
 fit
-
 mean(boot_spread$value)
 ```
 
@@ -284,10 +283,6 @@ win <- length(which(Perdue > 0)) / n #prob  winning
 lose <- length(which(Perdue < 0)) / n #prob  losing
 
 cbind(win, lose)
-```
-
-```{r}
-
 ```
 
 ```{r}
