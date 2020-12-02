@@ -372,20 +372,27 @@ summary {
 <p>The goal of this project is to simulate and obtain probabilities for the January 5, 2021 Georgia Senate Runoff Election between incumbent Republican Senator David Purdue and Democratic challenger Jon Ossoff. The data for this project was sourced from the fivethirtyeight.com database. <a href="https://data.fivethirtyeight.com/" class="uri">https://data.fivethirtyeight.com/</a></p>
 <p>The code is split into six main files under the <code>Analysis</code> folder:</p>
 <p>[ ] <strong>Exploratory Data Analysis</strong> <code>00_EDA.Rmd</code></p>
-<p>This file will explores some visuals regarding the polling data, which helped influence the later approaches.</p>
+<ul>
+<li>This file will explores some visuals regarding the polling data, which helped influence the later approaches.</li>
+</ul>
 <p>[ ] <strong>Johnson vs Normal</strong> <code>01_Johnson_Distribution.Rmd</code></p>
-<p>Duo to the partisan nature of the United States electorate, this file explores the possibility that prediction should be based on a distribution with “fatter” tails.</p>
+<ul>
+<li>Duo to the partisan nature of the United States electorate, this file explores the possibility that prediction should be based on a distribution with “fatter” tails.</li>
+</ul>
 <p>[ ] <strong>Boot Strapping the Polling Data</strong> <code>02_Bootstrap.Rmd</code></p>
-<p>With a limited number of polling done before the election bootstrapping helped achieve an adequate sample size.</p>
+<ul>
+<li>With a limited number of polling done before the election bootstrapping helped achieve an adequate sample size.</li>
+</ul>
 <p>[ ] <strong>Computing Probabilities of a Candidate Winning</strong> <code>03_candidate_probabilities.Rmd</code></p>
-<p>The end product, involving a visualization and computation of the bootstrapped polling spread and the resulting assigned probabilities.<br />
-These will change slightly each time the code is ran, but most likely not by more than a few percentage points.</p>
+<ul>
+<li>The end product, involving a visualization and computation of the bootstrapped polling spread and the resulting assigned probabilities. These will change slightly each time the code is ran, but most likely not by more than a few percentage points.</li>
+</ul>
 <p>[ ] <strong>Testing the Bootstrapped Probabilities with Fake Data</strong> <code>04_fake_polling.Rmd</code></p>
 <p>Fake data was created in order to the check the model for unreasonable outcomes. i.e. if the polling data shows one candidate with a<br />
 double digit pointing lead then this candidate should have a rather high probability of winning.</p>
 <p>[ ] <strong>Testing the Bootstrapped Probabilities with Weighted Sampling</strong> <code>05_weighted_sampling.Rmd</code></p>
-<p>Grades are assigned to each poll, based on aspects like sample size and partisan lean of a pollster. This code attempted to take that into consideration when running the simulation.</p>
-<p>The data needed for this project can be found in the folder labeled `Dat</p>
+<p>*Grades are assigned to each poll, based on aspects like sample size and partisan lean of a pollster. This code attempted to take that into consideration when running the simulation.</p>
+<p>The data needed for this project can be found in the folder labeled <code>Data</code></p>
 </div>
 
 

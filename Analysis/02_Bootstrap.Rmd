@@ -52,8 +52,10 @@ boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_
 
 boot_spread <- melt(boot_spread)
 ggplot(boot_spread, aes(value)) +
-  geom_histogram(aes(y=..density..)) +
+  geom_histogram(aes(y=..density..), fill = "#5a2c3b", color = "black") +
   stat_function(fun = dnorm, args = c(mean = mean(boot_spread$value), sd = sd(boot_spread$value))) +
   geom_vline(xintercept = mean(boot_spread$value)) +
-  labs(title = "Bootstrapped Spreads")
+  labs(title = "Bootstrapped Spreads") +
+  ggthemes::theme_fivethirtyeight() +
+  theme(axis.title = element_text()) + xlab("Spread") + ylab("Number of Observations")
 ```

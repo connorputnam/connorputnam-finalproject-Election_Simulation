@@ -10,32 +10,7 @@ polls <- polls %>%
   filter(state == "Georgia") %>%
   filter(race_id == "7780" | race_id == "6271") %>%
   group_by(candidate_name)
-polls
 ```
-
-    ## # A tibble: 430 x 38
-    ## # Groups:   candidate_name [25]
-    ##    question_id poll_id cycle state pollster_id pollster sponsor_ids sponsors
-    ##          <int>   <int> <int> <fct>       <int> <fct>    <fct>       <fct>   
-    ##  1      135283   72146  2020 Geor…         320 Monmout… ""          ""      
-    ##  2      135283   72146  2020 Geor…         320 Monmout… ""          ""      
-    ##  3      135283   72146  2020 Geor…         320 Monmout… ""          ""      
-    ##  4      135284   72146  2020 Geor…         320 Monmout… ""          ""      
-    ##  5      135284   72146  2020 Geor…         320 Monmout… ""          ""      
-    ##  6      135285   72146  2020 Geor…         320 Monmout… ""          ""      
-    ##  7      135285   72146  2020 Geor…         320 Monmout… ""          ""      
-    ##  8      135286   72146  2020 Geor…         320 Monmout… ""          ""      
-    ##  9      135286   72146  2020 Geor…         320 Monmout… ""          ""      
-    ## 10      135286   72146  2020 Geor…         320 Monmout… ""          ""      
-    ## # … with 420 more rows, and 30 more variables: display_name <fct>,
-    ## #   pollster_rating_id <int>, pollster_rating_name <fct>, fte_grade <fct>,
-    ## #   sample_size <int>, population <fct>, population_full <fct>,
-    ## #   methodology <fct>, office_type <fct>, seat_number <int>, seat_name <fct>,
-    ## #   start_date <fct>, end_date <fct>, election_date <fct>,
-    ## #   sponsor_candidate <fct>, internal <fct>, partisan <fct>, tracking <lgl>,
-    ## #   nationwide_batch <fct>, ranked_choice_reallocated <fct>, created_at <fct>,
-    ## #   notes <fct>, url <fct>, stage <fct>, race_id <int>, answer <fct>,
-    ## #   candidate_id <int>, candidate_name <fct>, candidate_party <fct>, pct <dbl>
 
 # Johnson vs Normal
 
