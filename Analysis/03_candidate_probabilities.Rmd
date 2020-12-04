@@ -123,6 +123,11 @@ ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) 
 }
 ```
 
+```{r}
+georgia::probability_winning_plot("Perdue")
+```
+
+
 
 ```{r message=FALSE, warning=FALSE}
 probability_winning_plot("Perdue")

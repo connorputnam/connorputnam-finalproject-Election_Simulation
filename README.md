@@ -26,12 +26,12 @@ The code is split into six main files under the `Analysis` folder:
   
 [ ] **Testing the Bootstrapped Probabilities with Fake Data** `04_fake_polling.Rmd`
   
-  Fake data was created in order to the check the model for unreasonable outcomes. i.e. if the polling data shows one candidate with a   
+  * Fake data was created in order to the check the model for unreasonable outcomes. i.e. if the polling data shows one candidate with a   
   double digit pointing lead then this candidate should have a rather high probability of winning.
   
 [ ] **Testing the Bootstrapped Probabilities with Weighted Sampling** `05_weighted_sampling.Rmd`
   
-  *Grades are assigned to each poll, based on aspects like sample size and partisan lean of a pollster. This code attempted to take that 
+  * Grades are assigned to each poll, based on aspects like sample size and partisan lean of a pollster. This code attempted to take that 
   into consideration when running the simulation.
 
 The data needed for this project can be found in the folder labeled `Data`
