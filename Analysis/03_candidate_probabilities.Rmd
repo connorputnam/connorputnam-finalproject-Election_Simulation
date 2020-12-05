@@ -60,6 +60,7 @@ Ossof <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]),
 
 ```{r}
 combined_probs <- melt(as.data.frame(cbind(Perdue, Ossof)))
+```
 combined_probs <- combined_probs %>% 
   group_by(variable) %>%
   mutate_at(vars(variable), as.character) %>%
@@ -67,8 +68,7 @@ combined_probs <- combined_probs %>%
                                    (variable == "Perdue" & value < 0) ~ "lose",
                                    (variable == "Ossof" & value > 0) ~ "win",
                                    (variable == "Ossof" & value < 0) ~ "lose"))
-  #mutate(color_perdue = ifelse(value > 0, "red", "blue")) %>%
-  #mutate(color_ossof = ifelse(variable 0 & value > 0, "blue", "red"))
+
 combined_probs <- combined_probs %>%
   mutate(prob_winning = case_when((variable == "Perdue" & 
                                     wining_color == "win" ~ 
@@ -82,10 +82,10 @@ combined_probs <- combined_probs %>%
                                   (variable == "Ossof" & 
                                     wining_color == "lose" ~ 
                                     length(which(Ossof < 0)) / n)))
-```
+
 
 ```{r}
-as.numeric(combined_probs %>% filter(variable == "Perdue") %>% summarise(max = max(value)) %>% flatten_chr())[2]
+combined_probs <- georgia::probability_dataset(combined_probs)
 ```
 
 

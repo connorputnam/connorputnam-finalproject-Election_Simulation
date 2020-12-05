@@ -11,6 +11,7 @@ library(reshape2)
 ```
 
 
+
 ```{r}
 polls <- read.csv(here::here("Data" , "senate_polls.csv"))
 polls <- georgia::initial_poll_cleaning(polls)

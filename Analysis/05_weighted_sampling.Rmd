@@ -11,12 +11,8 @@ library(reshape2)
 
 
 ```{r}
-polls <- read.csv(here::here("Data", "senate_polls.csv"))
-
-polls <- polls %>%
-  filter(state == "Georgia") %>%
-  filter(race_id == "7780" | race_id == "6271") %>%
-  group_by(candidate_name)
+polls <- read.csv(here::here("Data" , "senate_polls.csv"))
+polls <- georgia::initial_poll_cleaning(polls)
 ```
 
 # Bootstrapping with Weights
@@ -138,11 +134,8 @@ combined_probs <- combined_probs %>%
 ```
 
 
-```{r}
-source("functions.R")
-```
 
 ```{r}
-probability_winning_plot("Perdue")
+georgia::probability_winning_plot("Perdue")
 ```
 

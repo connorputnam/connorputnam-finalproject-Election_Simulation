@@ -89,6 +89,8 @@ combined_probs <- combined_probs %>%
                                      wining_color == "lose" ~ 
                                      length(which(Ossof < 0)) / n)))
 
+return(combined_probs)
+
 }
 
 
