@@ -2,14 +2,8 @@ Johnson Distribution
 ================
 
 ``` r
-polls <- read.csv(here::here("Data","senate_polls.csv"))
-```
-
-``` r
-polls <- polls %>%
-  filter(state == "Georgia") %>%
-  filter(race_id == "7780" | race_id == "6271") %>%
-  group_by(candidate_name)
+polls <- read.csv(here::here("Data" , "senate_polls.csv"))
+polls <- georgia::initial_poll_cleaning(polls)
 ```
 
 # Johnson vs Normal
@@ -41,26 +35,8 @@ ggplot(overlay, aes(value, fill = variable)) +
   geom_density(alpha = 0.5)
 ```
 
-![](01_Johnson_Distribution_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](01_Johnson_Distribution_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
 #fat tails!
 ```
-
-## Set up for computing the distributions of spreads in regards to jon ossoff
-
-empty\_vec \<- rep((total\_data %\>% filter(cycle == “2020”) %\>%
-filter(candidate\_name == “David A. Perdue”))$spread , 100) \#perdue is
-in two races….casuing headaches here Ossof \<- (sd(johnson\_dist) \*
-johnson\_dist) + empty\_vec
-
-ggplot(data.frame(Ossof), aes(x = Ossof)) + geom\_density() +
-geom\_vline(xintercept = mean(Ossof))
-
-win \<- length(which(Ossof \> 0)) / n \#prob winning lose \<-
-length(which(Ossof \< 0)) / n \#prob losing
-
-cbind(win, lose)
-
-  - meaning democrate closes by that much, and positive means wins by
-    that much

@@ -1,26 +1,14 @@
----
-title: "Weight Polling"
-output: pdf_document
----
+Weight Polling
+================
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-
-```{r}
-polls <- read.csv(here::here("Data", "senate_polls.csv"))
-
-polls <- polls %>%
-  filter(state == "Georgia") %>%
-  filter(race_id == "7780" | race_id == "6271") %>%
-  group_by(candidate_name)
-polls
+``` r
+polls <- read.csv(here::here("Data" , "senate_polls.csv"))
+polls <- georgia::initial_poll_cleaning(polls)
 ```
 
 # Bootstrapping with Weights
 
-```{r}
+``` r
 boot_data <- read.csv(here::here("Data", "bootData.csv"))
 boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_data), replace = TRUE)) %>%
   map_dbl(mean)
@@ -28,7 +16,7 @@ boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_
 boot_spread <- melt(boot_spread)
 ```
 
-```{r}
+``` r
 boot_data_weights <- boot_data %>% group_by(fte_grade) %>%
                   mutate(Weights = case_when(fte_grade == "A+" ~ .2,
                              fte_grade == "A" ~ .15,
@@ -51,19 +39,42 @@ check <- check %>%
 
 ggplot(check, aes(value, n)) +
   geom_bar(stat = "identity")
+```
 
+![](05_weighted_sampling_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
 #looks like a good distribution
 ```
 
-```{r}
+``` r
 boot_data_weights %>% filter(candidate_name == "Jon Ossoff") %>% summarise(fjdklas = weighted.mean(actual_spread, (Weights)))
-weighted.mean(boot_data_weights$actual_spread, boot_data_weights$Weights)
+```
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 5 x 2
+    ##   Weights fjdklas
+    ##     <dbl>   <dbl>
+    ## 1   0.025   1.14 
+    ## 2   0.05   -0.961
+    ## 3   0.1    -0.150
+    ## 4   0.15   -2.65 
+    ## 5   0.2    -3.36
+
+``` r
+weighted.mean(boot_data_weights$actual_spread, boot_data_weights$Weights)
+```
+
+    ## [1] 0
+
+``` r
 with(boot_data_weights, weighted.mean(boot_data_weights$actual_spread, boot_data_weights$Weights))
 ```
 
+    ## [1] 0
 
-```{r}
+``` r
 boot_spread_weights <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_data$actual_spread), replace = TRUE, prob = boot_data_weights$Weights)) %>%
   map_dbl(mean)
 
@@ -75,7 +86,11 @@ ggplot(boot_spread_weights, aes(value)) +
   labs(title = "Bootstrapped Spreads")
 ```
 
-```{r}
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](05_weighted_sampling_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
 fit <- MASS:: fitdistr(boot_spread_weights$value, "normal")
   
 n <- 100000
@@ -87,7 +102,11 @@ empty_vec <- rep((boot_data_weights %>%
                     
                     select(average_spread)), n) %>%
   flatten_dbl()
+```
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
 boot_spread_weights <- boot_spread_weights %>% flatten_dbl()
 
 #This is where the actual predictions are now taking place
@@ -103,7 +122,11 @@ empty_vec_ossof <- rep((boot_data_weights %>%
                           
                           select(average_spread)), n) %>%
   flatten_dbl()
+```
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
 #This is where the actual predictions are now taking place
 
 
@@ -112,6 +135,11 @@ Ossof <- (sd(boot_spread_weights) * rnorm(n, mean(boot_spread_weights),
 
 
 combined_probs <- melt(as.data.frame(cbind(Perdue, Ossof)))
+```
+
+    ## No id variables; using all as measure variables
+
+``` r
 combined_probs <- combined_probs %>% 
   group_by(variable) %>%
   mutate_at(vars(variable), as.character) %>%
@@ -136,12 +164,12 @@ combined_probs <- combined_probs %>%
                                      length(which(Ossof < 0)) / n)))
 ```
 
-
-```{r}
-source("functions.R")
+``` r
+georgia::probability_winning_plot("Perdue")
 ```
 
-```{r}
-probability_winning_plot("Perdue")
-```
+    ## Warning in vapply(x, is.null, logical(1)): NAs introduced by coercion
+    
+    ## Warning in vapply(x, is.null, logical(1)): NAs introduced by coercion
 
+![](05_weighted_sampling_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->

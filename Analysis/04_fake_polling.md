@@ -3,10 +3,7 @@ Fake Data Code
 
 ``` r
 polls <- read.csv(here::here("Data" , "senate_polls.csv"))
-polls <- polls %>%
-  filter(state == "Georgia") %>%
-  filter(race_id == "7780" | race_id == "6271") %>%
-  group_by(candidate_name)
+polls <- georgia::initial_poll_cleaning(polls)
 ```
 
 # Creating fake data

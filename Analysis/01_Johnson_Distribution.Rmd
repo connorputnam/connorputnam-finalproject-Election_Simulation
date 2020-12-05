@@ -6,18 +6,14 @@ output: github_document
 library(tidyverse)
 library(SuppDists)
 library(reshape2)
+library(devtools)
+devtools::load_all()
 ```
 
 
 ```{r}
-polls <- read.csv(here::here("Data","senate_polls.csv"))
-```
-
-```{r}
-polls <- polls %>%
-  filter(state == "Georgia") %>%
-  filter(race_id == "7780" | race_id == "6271") %>%
-  group_by(candidate_name)
+polls <- read.csv(here::here("Data" , "senate_polls.csv"))
+polls <- georgia::initial_poll_cleaning(polls)
 ```
 
 # Johnson vs Normal
@@ -45,21 +41,3 @@ ggplot(overlay, aes(value, fill = variable)) +
   geom_density(alpha = 0.5)
 #fat tails!
 ```
-
-## Set up for computing the distributions of spreads in regards to jon ossoff
-
-empty_vec <- rep((total_data %>% filter(cycle == "2020") %>% filter(candidate_name == "David A. Perdue"))$spread , 100)
-#perdue is in two races....casuing headaches here
-Ossof <- (sd(johnson_dist) * johnson_dist) + empty_vec
-
-ggplot(data.frame(Ossof), aes(x = Ossof)) +
-  geom_density() +
-  geom_vline(xintercept = mean(Ossof))
-
-win <- length(which(Ossof > 0)) / n #prob  winning
-lose <- length(which(Ossof < 0)) / n #prob  losing
-
-cbind(win, lose)
-
-- meaning democrate closes by that much, and positive means wins by that much
-
