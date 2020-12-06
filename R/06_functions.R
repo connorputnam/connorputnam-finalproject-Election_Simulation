@@ -33,7 +33,7 @@ probability_winning_plot <- function(candidate){
                              combined_probs %>% 
                                filter(wining_color == "win" & variable == candidate) %>% 
                                summarise(label_percent(accuracy = 0.01)(mean(prob_winning))) %>% 
-                               select(-variable) %>% flatten_chr()),
+                               dplyr::select(-variable) %>% flatten_chr()),
              color = "#009E73") +
     annotate(geom = "text", x = (as.numeric(combined_probs %>% 
                                               filter(variable == candidate) %>% 
@@ -43,7 +43,7 @@ probability_winning_plot <- function(candidate){
                                        combined_probs %>% 
                                          filter(wining_color == "lose" & variable == candidate) %>% 
                                          summarise(label_percent(accuracy = 0.01)(mean(prob_winning))) %>% 
-                                         select(-variable) %>% flatten_chr()), 
+                                         dplyr::select(-variable) %>% flatten_chr()), 
              color = "#D55E00")
 }
 
@@ -73,8 +73,7 @@ combined_probs <- data_set %>%
                                   (variable == "Perdue" & value < 0) ~ "lose",
                                   (variable == "Ossof" & value > 0) ~ "win",
                                   (variable == "Ossof" & value < 0) ~ "lose"))
-#mutate(color_perdue = ifelse(value > 0, "red", "blue")) %>%
-#mutate(color_ossof = ifelse(variable 0 & value > 0, "blue", "red"))
+
 combined_probs <- combined_probs %>%
   mutate(prob_winning = case_when((variable == "Perdue" & 
                                      wining_color == "win" ~ 

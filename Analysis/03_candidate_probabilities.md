@@ -1,37 +1,70 @@
 03\_candidate\_probabilities
 ================
 
-``` r
-boot_data <- read.csv(here::here("Data", "bootData.csv"))
+Originally in file `01_Johnson_Distribution` I thought it would be wise
+to have a distribution with wider tails. The issue with this approach is
+that I would be applying a distribution, in this case the Johnson, with
+no really mathematical reason, just my own priors. So instead, I decided
+to bootstrap my polling data in order to achieve
+normality.
 
-boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_data), replace = TRUE)) %>%
+``` r
+boot_data <- read.csv(here::here("Data", "bootData.csv")) #load in the dataset formated for bootstrapping
+
+#following code performs the bootstrap
+boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, 
+                                    size = length(boot_data), replace = TRUE)) %>%
   map_dbl(mean)
 
 boot_spread <- melt(boot_spread)
+boot_spread %>% head()
+```
+
+    ##        value
+    ## 1  0.4177778
+    ## 2 -0.1344444
+    ## 3 -1.8222222
+    ## 4  2.8333333
+    ## 5  3.1000000
+    ## 6  0.4444444
+
+``` r
+ggplot(boot_data, aes(actual_spread)) +
+  geom_histogram(bins = 15,  fill = "steelblue", color = "black") +
+  xlab("Actual Spread") +
+  ylab("Count") +
+  ggtitle("Data Before Mapping")
+```
+
+![](03_candidate_probabilities_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
+#Looking pretty normal!
+ggplot(boot_spread, aes(value)) +
+  geom_histogram(aes(y=..density..), fill = "steelblue", color = "black") +
+  stat_function(fun = dnorm, args = c(mean = mean(boot_spread$value), sd = sd(boot_spread$value))) +
+  geom_vline(xintercept = mean(boot_spread$value)) +
+  labs(title = "Bootstrapped Spreads")
+```
+
+![](03_candidate_probabilities_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
+fit <- fitdistr(boot_spread$value, "normal") #finding the paramter values
 ```
 
 ``` r
-fit <- MASS:: fitdistr(boot_spread$value, "normal")
-```
-
-``` r
-## Set up for computing the distributions of spreads in regards to jon ossoff
-
+## Set up for computing the distributions of spreads in regards to Perdue
 n <- 100000
 
 empty_vec <- rep((boot_data %>%
                     group_by(candidate_name) %>%
                     summarise(average_spread = mean(actual_spread)) %>%
                     filter(candidate_name == "David A. Perdue") %>%
-                    select(average_spread)), n) %>%
+                    dplyr::select(average_spread)), n) %>%
                     flatten_dbl()
-```
 
-    ## `summarise()` ungrouping output (override with `.groups` argument)
-
-``` r
 #This is where the actual predictions are now taking place
-
 Perdue <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]), 
                                                      as.numeric(fit$estimate[2]))) + empty_vec 
 ```
@@ -42,93 +75,23 @@ empty_vec_ossof <- rep((boot_data %>%
                     group_by(candidate_name) %>%
                     summarise(average_spread = mean(actual_spread)) %>%
                     filter(candidate_name == "Jon Ossoff") %>%
-                    select(average_spread)), n) %>%
+                    dplyr::select(average_spread)), n) %>%
                     flatten_dbl()
-```
 
-    ## `summarise()` ungrouping output (override with `.groups` argument)
-
-``` r
 #This is where the actual predictions are now taking place
-
 Ossof <- (as.numeric(fit$estimate[2]) * rnorm(n, as.numeric(fit$estimate[1]), 
                                                      as.numeric(fit$estimate[2]))) + empty_vec_ossof 
 ```
 
 ``` r
-combined_probs <- melt(as.data.frame(cbind(Perdue, Ossof)))
+combined_probs <- melt(as.data.frame(cbind(Perdue, Ossof))) #making the data ggplot friendly 
+                                                            #by using the reshape pacakge
+combined_probs <- georgia::probability_dataset(combined_probs)
 ```
 
-    ## No id variables; using all as measure variables
-
-``` r
-combined_probs <- combined_probs %>% 
-  group_by(variable) %>%
-  mutate_at(vars(variable), as.character) %>%
-  mutate(wining_color = case_when((variable == "Perdue" & value > 0) ~ "win",
-                                   (variable == "Perdue" & value < 0) ~ "lose",
-                                   (variable == "Ossof" & value > 0) ~ "win",
-                                   (variable == "Ossof" & value < 0) ~ "lose"))
-  #mutate(color_perdue = ifelse(value > 0, "red", "blue")) %>%
-  #mutate(color_ossof = ifelse(variable 0 & value > 0, "blue", "red"))
-combined_probs <- combined_probs %>%
-  mutate(prob_winning = case_when((variable == "Perdue" & 
-                                    wining_color == "win" ~ 
-                                    length(which(Perdue > 0)) / n),
-                                  (variable == "Perdue" & 
-                                    wining_color == "lose" ~ 
-                                    length(which(Perdue < 0)) / n),
-                                  (variable == "Ossof" & 
-                                    wining_color == "win" ~ 
-                                    length(which(Ossof > 0)) / n),
-                                  (variable == "Ossof" & 
-                                    wining_color == "lose" ~ 
-                                    length(which(Ossof < 0)) / n)))
-```
-
-``` r
-as.numeric(combined_probs %>% filter(variable == "Perdue") %>% summarise(average = mean(value)) %>% flatten_chr())[2]
-```
-
-    ## `summarise()` ungrouping output (override with `.groups` argument)
-
-    ## Warning: NAs introduced by coercion
-
-    ## [1] 1.197446
-
-``` r
-probability_winning_plot <- function(candidate){
-ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) +
-  geom_histogram(aes(fill = wining_color), color = "black", bins = 30) +
-  ggthemes::theme_fivethirtyeight() +
-  theme(axis.title = element_text()) + xlab("Spread") + ylab("Number of Observations") +
-  theme(legend.title = element_blank()) +
-  scale_x_continuous(breaks = c(-5:5)) +
-  labs(title = sprintf("Probability of Winning vs Losing for %s", candidate)) +
-  scale_fill_manual(values = c("#D55E00", "#009E73")) +
-  annotate(geom = "text", x = (as.numeric(combined_probs %>% 
-                                           filter(variable == candidate) %>% 
-                                           summarise(average = mean(value)) %>% 
-                                           flatten_chr())[2]) + 4, 
-                          y = 8100, 
-           label = sprintf("Winning : %s", 
-                           combined_probs %>% 
-                             filter(wining_color == "win" & variable == candidate) %>% 
-                             summarise(label_percent(accuracy = 0.01)(mean(prob_winning))) %>% 
-                             select(-variable) %>% flatten_chr()),
-           color = "#009E73") +
-  annotate(geom = "text", x = (as.numeric(combined_probs %>% 
-                                           filter(variable == candidate) %>% 
-                                           summarise(average = mean(value)) %>% 
-                                           flatten_chr())[2]) - 4,
-                          y = 8100, label = sprintf("Losing : %s", 
-                           combined_probs %>% 
-                             filter(wining_color == "lose" & variable == candidate) %>% 
-                             summarise(label_percent(accuracy = 0.01)(mean(prob_winning))) %>% 
-                             select(-variable) %>% flatten_chr()), 
-           color = "#D55E00")
-}
-```
+Finally the next two lines of code are using a function in the georgia
+package to create probabilities of winning and losing for each
+candidate.
 
 ``` r
 probability_winning_plot("Perdue")

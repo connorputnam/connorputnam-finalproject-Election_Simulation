@@ -1,32 +1,27 @@
 ---
 title: "EDA"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(scales)
 library(formattable)
-library(SuppDists)
-library(reshape2)
+library(ggthemes)
+library(devtools)
+devtools::load_all()
 ```
 
 Start by reading in the senate polling data. I have this as a .cvs so it will need to manually updated from time to time. 
 
 ```{r}
-polls <- read.csv(here::here("Data","senate_polls.csv"))
-```
-
-```{r}
-polls <- polls %>%
-  filter(state == "Georgia") %>%
-  filter(race_id == "7780" | race_id == "6271") %>%
-  group_by(candidate_name)
-polls
+polls <- read.csv(here::here("Data" , "senate_polls.csv")) #loading data
+polls <- georgia::initial_poll_cleaning(polls) #cleaning via the georgia package
 ```
 
 # EDA
+
+Even though I will be modeling the Ossoff vs Perdue race I thought it might be insightful to see where the other Georgia Senate race stands. The top two candidates are basically tied. 
 
 ```{r}
 EDA_polls <- polls %>% 
@@ -38,7 +33,9 @@ EDA_polls <- polls %>%
 ggplot(EDA_polls, aes(reorder(candidate_name, average_polling), average_polling, fill = candidate_party, label = round(average_polling, 2))) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values=c("#26b3f2", "#fcd407", "#ec1e26")) +
+  theme_fivethirtyeight() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  ggtitle("Prior to Runoff Standings") +
   ylab("Polling Average(percent)") +
   xlab("Candidate") +
   geom_text(position = position_dodge(width = .9),    # move to center of bars
@@ -47,6 +44,7 @@ ggplot(EDA_polls, aes(reorder(candidate_name, average_polling), average_polling,
   ylim(0, 25)
 ```
 
+Polling quality will be important when trying to make predictions. Below I made a quick graph showing the fivethirtyeight ratings for every poll. They take many things into consideration when rating the polls such as sample size and partisan lean of a pollster. I will use this information more in my analysis file `05_weighted sampling`.
 
 ```{r}
 EDA_polls_rating <- polls %>% 
@@ -54,10 +52,9 @@ EDA_polls_rating <- polls %>%
   count(fte_grade) %>%
   mutate(fte_grade = fct_recode(fte_grade, "No Rating" = ""))
 
-#fct_recode 
-
 ggplot(EDA_polls_rating, aes(fte_grade, n, fill = fte_grade)) +
   geom_bar(stat = "identity") +
+  theme_fivethirtyeight() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
   ylab("Number of Polls Conducted") +
   xlab("Rating") +
@@ -65,7 +62,7 @@ ggplot(EDA_polls_rating, aes(fte_grade, n, fill = fte_grade)) +
   labs(fill = "Ratings")
 ```
  
-Now that the off happened...going to build the model based off of Perdue vs Ossoff and then make a function that can sub out either race
+Next up, I wanted to see where the polls currently stand for the Perdue vs Ossoff race, so below I plotted the current polling averages.
 
 ```{r}
 Perdue_vs_Ossoff <- polls %>% 
@@ -76,10 +73,14 @@ Perdue_vs_Ossoff <- polls %>%
 Perdue_vs_Ossoff
 
 
-ggplot(Perdue_vs_Ossoff, aes(reorder(candidate_name, average_polling), average_polling, fill = candidate_party, label = round(average_polling, 2))) +
+ggplot(Perdue_vs_Ossoff, aes(reorder(candidate_name, average_polling), 
+                             average_polling, 
+                             fill = candidate_party, 
+                             label = round(average_polling, 2))) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values=c("#26b3f2", "#ec1e26")) +
-  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  theme_fivethirtyeight() +
+  ggtitle("Polling Averages") +
   ylab("Polling Average(percent)") +
   xlab("Candidate") +
   geom_text(position = position_dodge(width = .9),    # move to center of bars
@@ -88,12 +89,12 @@ ggplot(Perdue_vs_Ossoff, aes(reorder(candidate_name, average_polling), average_p
   ylim(0, 60)
 ```
 
-This is where some of my priors/judgement calls come into play. I am going to use data on previous elections, as well as the over partisan lean of Geogria, and some other factor.
+Lastly, I wanted to pull in some historical data to see how past candidates performed in Georgia Senate elections. Mostly curious about how well Republicans did compared to Democrats.
 
 ```{r}
 #bringing in old data
 
-historical <- read.csv("us_senate_elections.csv")
+historical <- read.csv(here::here("data", "us_senate_elections.csv"))
 historical <- historical %>%
   filter(state == "GA" |state == "Georgia") # just geogria
 
@@ -109,16 +110,9 @@ average_historical <- function(select_year){
 
 #Isakson vs Barksdale and Perdue vs Nunn
 summary_table <- bind_rows(average_historical("2016"), average_historical("2014"))
-
-#formattable(summary_table,
-        #    align = c("l", rep("r", rep(NCOL(summary_table)))),
-        #    list(`"Summary Statistics"` = formatter("span",
-            #                  style = ~style(color = "gray"))))
 ```
 
-# Historical Data
 ```{r}
-Perdue_vs_Ossoff
 summary_table <- summary_table %>%
   rename("candidate_party" = party) %>%
   rename("cycle" = year) %>%
@@ -136,7 +130,6 @@ total_data <- bind_rows(Perdue_vs_Ossoff, summary_table) %>%
   mutate(spread = average_polling - lag(average_polling)) %>%
   fill(spread, .direction = "up") %>%
   mutate(spread = case_when(candidate_party == "R" ~ spread,
-                            candidate_party == "D" ~ (-1 * spread))) #creating the spread for both candidates based on party. THis took be a longggg time to figure out
-  #pivot_longer(cols = c(candidate_name, average_polling, standard_deviation), names_to = "variables", values_to = "times")
-total_data
+                            candidate_party == "D" ~ (-1 * spread))) #creating the spread for both candidates based on party. 
+formattable(total_data)
 ```
