@@ -6,8 +6,6 @@ polls <- read.csv(here::here("Data" , "senate_polls.csv")) #loading data
 polls <- georgia::initial_poll_cleaning(polls) #cleaning via the georgia package
 ```
 
-# Johnson vs Normal
-
 The first thing to consider after the initial EDA are priors into how
 election data might be structured. Based on knowledge of the American
 Electoral it might be reasonable to look into a distribution that has

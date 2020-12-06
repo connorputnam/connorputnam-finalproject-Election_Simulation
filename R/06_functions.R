@@ -14,7 +14,7 @@
 #'  \code{\link[ggthemes]{theme_fivethirtyeight}}
 #' @rdname probability_winning_plot
 #' @export 
-#' @importFrom ggthemes theme_fivethirtyeight
+#' @importFrom ggthemes theme_fivethirtyeight tidyverse
 probability_winning_plot <- function(candidate){
   ggplot((combined_probs %>% filter(variable == sprintf(candidate))), aes(value)) +
     geom_histogram(aes(fill = wining_color), color = "black", bins = 30) +
@@ -113,3 +113,7 @@ initial_poll_cleaning <- function(data){
   filter(race_id == "7780" | race_id == "6271") %>%
   group_by(candidate_name)
 }
+
+
+
+

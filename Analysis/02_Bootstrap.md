@@ -2,32 +2,6 @@
 ================
 
 ``` r
-library(tidyverse)
-```
-
-    ## ── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
-
-    ## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
-    ## ✓ tibble  3.0.3     ✓ dplyr   1.0.0
-    ## ✓ tidyr   1.1.0     ✓ stringr 1.4.0
-    ## ✓ readr   1.4.0     ✓ forcats 0.5.0
-
-    ## ── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## x dplyr::filter() masks stats::filter()
-    ## x dplyr::lag()    masks stats::lag()
-
-``` r
-library(reshape2)
-```
-
-    ## 
-    ## Attaching package: 'reshape2'
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     smiths
-
-``` r
 polls <- read.csv(here::here("Data","senate_polls.csv"))
 polls <- polls %>%
   filter(state == "Georgia") %>%
@@ -87,10 +61,12 @@ boot_spread <- map(1:10000, ~sample(boot_data$actual_spread, size = length(boot_
 
 boot_spread <- melt(boot_spread)
 ggplot(boot_spread, aes(value)) +
-  geom_histogram(aes(y=..density..)) +
+  geom_histogram(aes(y=..density..), fill = "#5a2c3b", color = "black") +
   stat_function(fun = dnorm, args = c(mean = mean(boot_spread$value), sd = sd(boot_spread$value))) +
   geom_vline(xintercept = mean(boot_spread$value)) +
-  labs(title = "Bootstrapped Spreads")
+  labs(title = "Bootstrapped Spreads") +
+  ggthemes::theme_fivethirtyeight() +
+  theme(axis.title = element_text()) + xlab("Spread") + ylab("Number of Observations")
 ```
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.

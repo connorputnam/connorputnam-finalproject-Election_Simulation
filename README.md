@@ -48,3 +48,5 @@ The packages needed to run this repo are as follows:
   * `georgia`, which is not part of CRAN but built in this repo, in the script file `06_functions.R` in the `R` folder.
   
 The functions that are part of the `georgia` package have help documentation on how they should be ran.
+
+Lastly my presentation slides and project report can be found under the file `Report and Presentation`. 
