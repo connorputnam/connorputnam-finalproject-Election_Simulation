@@ -1,5 +1,5 @@
 ---
-title: "Report"
+title: "PCS Project Report"
 output: pdf_document
 ---
 
@@ -9,7 +9,7 @@ The goal of this project was to assign probabilities to the upcoming Georgia Sen
 
 # Implantation
 
-Every file within this repo is self-contained and will run independently. Within the repo is a package called `georgia` which holds a few of the key functions used in the project. The three functions it contains are `probability_winning_plot`, `probability_dataset`, and `initial_poll_cleaning`. The goal of these three functions is to take dataset from `fivethirtyeight.com` and allow it to be easily implemented in my probability forecast model. `initial_poll_cleaning` takes in a downloaded `.cvs` file that is saved as a variable and does the data manipulation necessary to proceed with the forecasting. The function `probability_dataset` works on this by doing some of the more complicated data manipulation, involving logical statements, and makes it ready for the last function, `probability_winning_plot`. `probability_winning_plot` then plots the probabilities in a way that allows for dynamic poll values.
+Every file within this repo is self-contained and will run independently. Within the repo is a package called `georgia` which holds a few of the key functions used in the project. The three functions it contains are `probability_winning_plot`, `probability_dataset`, and `initial_poll_cleaning`. The goal of these three functions is to take senate election datasets from `fivethirtyeight.com` and allow it to be easily implemented in my probability forecast model. `initial_poll_cleaning` takes in a downloaded `.cvs` file that is saved as a variable and does the data manipulation necessary to proceed with the forecasting. The function `probability_dataset` works on this by doing some of the more complicated data manipulation, involving logical statements, and makes it ready for the last function, `probability_winning_plot`. `probability_winning_plot` then plots the probabilities in a way that allows for dynamic poll values.
 
 # Bootstrapping and Mapping
 
